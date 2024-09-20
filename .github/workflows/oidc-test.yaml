@@ -1,0 +1,29 @@
+name: OIDC test action
+
+# trigger on every push
+on:
+  push:
+
+jobs:
+  oidc-test:
+    runs-on: ubuntu-latest
+    # These permissions are needed to interact with GitHub's OIDC Token endpoint.
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      # This action is a very common action, used to download the repo then cd to its folder
+      - name: Download repo and cd to the repo folder
+        uses: actions/checkout@v2
+
+      # This is an aws provided action, that logs in into an AWS account using an OIDC connection.
+      - name: Configure AWS credentials from Test account
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          # Hands-on 1: Replace this with your OIDC role
+          role-to-assume: arn:aws:iam::010928208181:role/deployment-role
+          aws-region: eu-west-1
+
+      # This is a simple test to make sure that we were logged in successfully
+      - name: test aws access
+        run: aws sts get-caller-identity

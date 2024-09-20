@@ -1,0 +1,77 @@
+name: Terraform CI-CD
+on:
+  workflow_dispatch:
+# Hands-on 3: add a trigger on push to main https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#push
+
+
+# These permissions are needed to interact with GitHub's OIDC Token endpoint.
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  terraform-ci:
+    runs-on: ubuntu-latest
+    steps:
+## Setup Section
+    # This action is a very common action, used to download the repo then cd to its folder
+    - name: Download repo and cd to the repo folder
+      uses: actions/checkout@v2
+
+    # This is an aws provided action, that logs in into an AWS account using an OIDC connection.
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        # Hands-on 3: Replace this with your OIDC role
+        role-to-assume: arn:aws:iam::12345678910:role/deployment-role
+        aws-region: us-east-1
+
+    # Hands-on 3: Add a step to Setup terraform on the GitHub Runner using this action https://github.com/hashicorp/setup-terraform
+
+
+    # Terraform init to download providers/modules and connect to backend
+    - name: Terraform Init
+      run: terraform init
+
+## CI Section:
+    # Make sure code is correctly formatted
+    - name: Make sure code is formatted
+      run: terraform fmt -check
+
+    # Hands-on 3: Add a step to make sure Terraform code is valid using the command `terraform validate`
+
+    # Do a Terraform plan to see what are the changes to be done, note that Terraform can't guarantee to take apply these changes if you run "terraform apply", because terraform apply would be run at a later stage with a potentially different state file.
+    - name: Terraform Plan
+      run: terraform plan
+
+  terraform-cd:
+    runs-on: ubuntu-latest
+    needs: [ terraform-ci ] # to make the deployment sequential
+    # Hands-on 3: require approvals before deploying to prd via environments, you need to go to GitHub repo settings to do that.
+    # https://docs.github.com/en/actions/deployment/targeting-different-environments/using-environments-for-deployment#deployment-protection-rules
+    environment: prd
+    steps:
+## Setup Section
+    # This action is a very common action, used to download the repo then cd to its folder
+    - name: Download repo and cd to the repo folder
+      uses: actions/checkout@v2
+
+    # This is an aws provided action, that logs in into an AWS account using an OIDC connection.
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        # Hands-on 3: Replace this with your OIDC role
+        role-to-assume: arn:aws:iam::12345678910:role/deployment-role
+        aws-region: us-east-1
+
+    ## TODO: Hands-on 3: Add a step to Setup terraform on the GitHub Runner using this action https://github.com/hashicorp/setup-terraform
+
+
+    # Terraform init to download providers/modules and connect to backend
+    - name: Terraform Init
+      run: terraform init
+
+## CD Section:
+    # Deploy Terraform code
+    # Hands-on 3: Add a step to deploy Terraform code using the command `terraform apply --auto-approve`
+
