@@ -8,3 +8,17 @@ resource "aws_s3_bucket" "example" {
 }
 
 # Hands-on 4: use the module from the repo terraform-aws-s3-module
+module "s3_bucket" {
+  source  = "git::https://github.com/Syyms/terraform-aws-project.git//terraform-aws-s3-module?ref=v1.0.0"
+
+  s3_bucket_name = "my-super-main-project-bucket"
+  key_name       = "my-main-project-kms-key"
+}
+
+output "bucket_name" {
+  value = module.s3_bucket.s3_bucket_name
+}
+
+output "kms_key_alias" {
+  value = module.s3_bucket.kms_key_alias
+}
